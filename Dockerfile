@@ -30,19 +30,19 @@ LABEL permissions '\
 }'
 LABEL authors '[\
     {\
-        "name": "Willian Galvani",\
-        "email": "willian@bluerobotics.com"\
+        "name": "Michael Bommhardt-Richter",\
+        "email": "m.bommhardt@gmx.de"\
     }\
 ]'
 LABEL docs ''
 LABEL company '{\
         "about": "",\
-        "name": "Blue Robotics",\
-        "email": "support@bluerobotics.com"\
+        "name": "Archaeocopter",\
+        "email": "Archaeocopter"\
     }'
-LABEL readme 'https://raw.githubusercontent.com/Williangalvani/BlueOS-examples/{tag}/example5-gpio-control/Readme.md'
-LABEL website 'https://github.com/Williangalvani/BlueOS-examples/'
-LABEL support 'https://github.com/Williangalvani/BlueOS-examples/'
+LABEL readme 'http://www.archaeocopter.de/'
+LABEL website 'http://www.archaeocopter.de/'
+LABEL support 'http://www.archaeocopter.de/'
 LABEL requirements="core >= 1"
 
 ENTRYPOINT pigpiod && cd /app && GPIOZERO_PIN_FACTORY=pigpio python main.py

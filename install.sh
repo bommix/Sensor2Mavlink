@@ -13,6 +13,10 @@ BUILD_TOOLS=(
     wget
     unzip
     make
+	build-essential
+	python-dev
+	python-smbus
+	python-pip
 )
 
 BUILD_LIBS=(
@@ -33,3 +37,4 @@ make install
 apt -y remove ${BUILD_TOOLS[*]}
 apt -y autoremove
 apt -y clean
+sudo raspi-config nonint do_i2c 0
