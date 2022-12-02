@@ -94,7 +94,7 @@ class MM:
             "id": 0,
             "severity": { "type": "MAV_SEVERITY_EMERGENCY" },
             "text": lst,
-            "type": "STATUSTEXT"
+            "type": "STATUSTEXT" 
             },
         }
         asyncio.run(self.send_mavlink_message(1))
