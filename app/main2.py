@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 from pathlib import Path
-import statistics
+
 import appdirs
 import uvicorn
 from fastapi.staticfiles import StaticFiles
@@ -10,7 +10,7 @@ from fastapi_versioning import VersionedFastAPI, version
 from loguru import logger
 from gpiozero import Servo
 from unsync import unsync
-from multiprocessing import Process
+ 
 
 from pydantic import BaseModel
 
@@ -107,54 +107,13 @@ class MM:
             },
         }
         asyncio.run(self.send_mavlink_message(1))
-        #"message": { "time_usec": 1667512936,
-    def send_sensors_to_mavlink(self, o2_value: float, tds_value: float, ph_value: float, turbidity_value: float) -> None:
-        #(o2_value,tds_value,ph_value,turbidity_value)
-        self.mavlink2rest_package = {
-            "header": {"system_id": 1, "component_id": 1, "sequence": 1},
-            "message": { "time_usec": int(((time.time() - self.time_since_boot) * 1000)),
-            "type": "GPS2_RAW",			
-            "fix_type": { "type": "GPS_FIX_TYPE_3D_FIX" },
-            "lat": int(o2_value*10000),
-            "lon": int(tds_value*10000),
-            "alt": int(ph_value*10000),
-            "eph": int(turbidity_value*10000),
-            "epv": 0,
-            "vel": 0,
-            "cog": 0,
-            "satellites_visible": 22,
-            "dgps_numch": 0,
-            "dgps_age": 99999
-            },
-        }
-        #print(int(((time.time() - self.time_since_boot) * 1000)))
-        asyncio.run(self.send_mavlink_message(1))
 
     def getSensors(self) -> None:
-        
-        while True:
-            try:
-                i2c = busio.I2C(board.SCL, board.SDA)
-                ads = ADS.ADS1115(i2c)
-                chan0 = AnalogIn(ads, ADS.P0)
-                chan1 = AnalogIn(ads, ADS.P1)
-                chan2 = AnalogIn(ads, ADS.P2)
-                chan3 = AnalogIn(ads, ADS.P3)
-                break
-            except Exception:
-                print("InitError")
-                
-        list=[],[],[],[] 
         while True:
             time.sleep(0.2)
-            #print("written")
-            
-            list_o2=list[0]
-            list_tds=list[1]
-            list_ph=list[2]
-            list_turbidity=list[3]
+            print(1)
             try:
-                #Auslesen der Analogen Calib Werte
+                #Öffnen der Calibfiles
                 f=open(o2_calib_file, "r")
                 o2_calib = float(f.read())
                 f=open(ph_calib_file, "r")
@@ -163,65 +122,39 @@ class MM:
                 tds_calib = float(f.read())
                 f=open(turbidity_calib_file, "r")
                 turbidity_calib = float(f.read())
-                #print("written")
-                list_o2.append(chan0.voltage*o2_calib)
-                list_tds.append(chan1.voltage*tds_calib)
-                list_ph.append(chan2.voltage*ph_calib)
-                list_turbidity.append(chan3.voltage*turbidity_calib)
-                #print(len(list[0]))
 
-                if len(list[0]) > 9:
-                    
-                    for z in range(4):
-                        mean = statistics.mean(list[z])
-                        #print(mean)
-                        resall = statistics.variance(list[z])
-                        #print("The variance of list is : " + str(resall)) 
-                        for x in range(3):
-                          for x in range(len(list[z])):
-                            #print(x)
-                            listneu=list[z].copy()
-                            #print(listneu)
-                            del listneu[x]
-                            res = statistics.variance(listneu)
-                            if resall > res:
-                              y=x
-                          del list[z][y]
-                          resall = statistics.variance(list[z])
-                          #print(list[z])
-                          #print("The variance of list is : " + str(resall))
-                        list[z][0] = statistics.mean(list[z])
-                            
-                    
-                    #Schreiben der Analogen Werte
-                    f=open(o2_file, "w")
-                    f.write(str(round(list[0][0],3)))
-                    f=open(tds_file, "w")
-                    f.write(str(round(list[1][0],3)))
-                    f=open(ph_file, "w")
-                    f.write(str(round(list[2][0],3)))
-                    f=open(turbidity_file, "w")
-                    f.write(str(round(list[3][0],3)))
+                #Auslesen der Analogen Werte
+                o2_value=chan0.voltage*o2_calib
+                tds_value=chan1.voltage*tds_calib
+                ph_value=chan2.voltage*ph_calib
+                turbidity_value=chan3.voltage*turbidity_calib
 
-                    #Logoutput
-                    print(str(round(list[0][0],3)), str(round(list[1][0],3)), str(round(list[2][0],3)), str(round(list[3][0],3)))                   
-                    self.send_sensors_to_mavlink(round(list[0][0],3),round(list[1][0],3),round(list[2][0],3),round(list[3][0],3))
-                    list=[],[],[],[] 
-                    print("Daten geschrieben")
-                    #self.send_statustext("TEST")
+                #Schreiben der Analogen Werte
+                f=open(o2_file, "w")
+                f.write(str(round(o2_value,3)))
+                f=open(tds_file, "w")
+                f.write(str(round(tds_value,3)))
+                f=open(ph_file, "w")
+                f.write(str(round(ph_value,3)))
+                f=open(turbidity_file, "w")
+                f.write(str(round(turbidity_value,3)))
+
+                #Logoutput
+                print("written")
+                print("{:>5.3f}\t{:>5.3f}\t{:>5.3f}\t{:>5.3f}".format(o2_value, tds_value, ph_value, turbidity_value))
+
             except Exception:
                 #Ausgeben des Fehlers
-                x=1 #
+                x=1 
                 print("ValueError")
     
     
     
             
     def getSensorsService(self) -> None:
-        self.getSensors()
-        #t = Thread(target=self.getSensors, args=())
+        t = Thread(target=self.getSensors, args=())
         #t= Thread(target=, args())
-        #t.run()
+        t.run()
         
         
     
@@ -250,12 +183,9 @@ app = FastAPI(
     description="API to send Sensors to Mavlink",
 )
 
+logger.info(f"Starting {SERVICE_NAME}!")
 test=MM()
-#test.getSensorsService()
-print("written")
-p = Process(target=test.getSensorsService, args=())
-p.start()
-#p.join()
+test.getSensors()
 #start_new_thread(test.getSensorsService,())
 #s.deamon = True
 #t= Thread(target=, args())
@@ -270,14 +200,6 @@ servos = {}
 
 logger.info(f"Starting {SERVICE_NAME}!")
 logger.info(f"Text file in use: {text_file}")
-logger.info(f"PH file in use: {ph_file}")
-logger.info(f"TDS file in use: {tds_file}")
-logger.info(f"O2 file in use: {o2_file}")
-logger.info(f"Turbidity file in use: {turbidity_file}")
-logger.info(f"O2_Calib file in use: {o2_calib_file}")
-logger.info(f"TDS_Calib file in use: {tds_calib_file}")
-logger.info(f"PH_Calib file in use: {ph_calib_file}")
-logger.info(f"Turbidity_Calib file in use: {turbidity_calib_file}")
 
 
 
@@ -287,11 +209,9 @@ logger.info(f"Turbidity_Calib file in use: {turbidity_calib_file}")
 async def load_calib_ph() -> Any:
     data = ""
     
-    if ph_calib_file.exists():
+    if ph_file.exists():
         with open(ph_calib_file, "r") as f:
             data = f.read()
-    else:
-        data = 1.0
     logger.info(f"Load PH calib: {data}")
     return data
     
@@ -299,11 +219,9 @@ async def load_calib_ph() -> Any:
 @version(1, 0)
 async def load_calib_tds() -> Any:
     data = ""
-    if tds_calib_file.exists():
+    if tds_file.exists():
         with open(tds_calib_file, "r") as f:
             data = f.read()
-    else:
-        data = 1.0
     logger.info(f"Load TDS calib: {data}")
     return data
     
@@ -311,11 +229,9 @@ async def load_calib_tds() -> Any:
 @version(1, 0)
 async def load_calib_o2() -> Any:
     data = ""
-    if o2_calib_file.exists():
+    if o2_file.exists():
         with open(o2_calib_file, "r") as f:
             data = f.read()
-    else:
-        data = 1.0
     logger.info(f"Load O2 calib: {data}")
     return data
     
@@ -323,11 +239,9 @@ async def load_calib_o2() -> Any:
 @version(1, 0)
 async def load_calib_turbidity() -> Any:
     data = ""
-    if turbidity_calib_file.exists():
+    if turbidity_file.exists():
         with open(turbidity_calib_file, "r") as f:
             data = f.read()
-    else:
-        data = 1.0
     logger.info(f"Load turbidity calib: {data}")
     return data
     
@@ -343,6 +257,7 @@ async def load_calib_turbidity() -> Any:
 @version(1, 0)
 async def load_ph() -> Any:
     data = ""
+    
     if ph_file.exists():
         with open(ph_file, "r") as f:
             data = f.read()
@@ -446,3 +361,6 @@ async def root() -> Any:
 if __name__ == "__main__":
     # Running uvicorn with log disabled so loguru can handle it
     uvicorn.run(app, host="0.0.0.0", port=8120, log_config=None)
+    
+    
+
