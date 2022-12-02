@@ -207,7 +207,7 @@ class MM:
                     print(str(round(list[0][0],3)), str(round(list[1][0],3)), str(round(list[2][0],3)), str(round(list[3][0],3)))                   
                     self.send_sensors_to_mavlink(round(list[0][0],3),round(list[1][0],3),round(list[2][0],3),round(list[3][0],3))
                     list=[],[],[],[] 
-                    print("Daten geschrieben")
+                    #print("Daten geschrieben")
                     #self.send_statustext("TEST")
             except Exception:
                 #Ausgeben des Fehlers
